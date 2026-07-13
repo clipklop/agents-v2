@@ -108,3 +108,4 @@ Any exercises or challenges for students
 | `02-tool-calling` | Tool Calling | Tool definitions and calling logic |
 | `01-intro-to-agents` | Intro to Agents | Basic agent structure |
 | starter | Starter template | What students begin with |
+- do not add any other code other than the code I removed to the lesson, use git status to see that code. ADD NOTHING ELSE. you are only to help make lecture notes and add that code to the notes, no other code. do not look in the repo for any other code other than the code I removed

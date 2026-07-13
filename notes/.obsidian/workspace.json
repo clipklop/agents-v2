@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "course.md",
+                "file": "03-Single-Turn-Evals.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "course"
+              "title": "03-Single-Turn-Evals"
             }
           }
         ]
@@ -177,11 +177,18 @@
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
       "command-palette:Open command palette": false,
-      "bases:Create new base": false
+      "bases:Create new base": false,
+      "publish:Publish changes...": false
     }
   },
   "active": "fea18391b613496b",
   "lastOpenFiles": [
+    "01-Intro-to-Agents.md",
+    "03-Single-Turn-Evals.md",
+    "02-Tool-Calling.md",
+    "course.md",
+    "04-The-Agent-Loop.md",
+    "05-Multi-turn-Evals.md",
     "06-File-System-Tools.md",
     "07-Web-Search-Context-Management.md",
     "08-Shell-Tool.md",
