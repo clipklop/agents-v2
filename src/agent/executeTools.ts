@@ -1,4 +1,4 @@
-import { tools } from "./tools/index.ts";
+import { tools } from "./tools/index.js";
 export type ToolName = keyof typeof tools;
 
 export const executeTool = async (name:string, args:any) => {
@@ -16,6 +16,9 @@ export const executeTool = async (name:string, args:any) => {
     const result = await execute(args, {
         toolCallId: "",
         messages: [],
+        // Provide an empty context to satisfy the execution API; concrete
+        // implementations can extend this as needed.
+        context: {} as any,
     });
 
     return String(result);
