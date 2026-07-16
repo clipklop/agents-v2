@@ -11,7 +11,7 @@ import type { AgentCallbacks } from "../types.js";
 const MODEL_NAME = "gpt-5.4-mini";
 
 Laminar.initialize({
-    projectApiKey: process.env.LMNR_API_KEY,
+    projectApiKey: process.env.LMNR_PROJECT_API_KEY,
 });
 
 export const runAgent = async (
@@ -22,6 +22,10 @@ export const runAgent = async (
     const { text, toolCalls } = await generateText({
         model: openai(MODEL_NAME),
         prompt: userMessage,
+        // messages: [
+        //     ...conversationHistory,
+        //     { role: "user", content: userMessage },
+        // ],
         system: SYSTEM_PROMPT,
         tools,
         telemetry: {
@@ -30,7 +34,7 @@ export const runAgent = async (
     });
 
     await Laminar.flush();
-    
+
     console.log(text, toolCalls);
 
     toolCalls.forEach(async element => {
