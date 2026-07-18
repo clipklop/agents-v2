@@ -1,4 +1,4 @@
-import { generateText, streamText, type AgentCallParameters, type ModelMessage } from "ai";
+import { generateText, streamText, tool, type AgentCallParameters, type ModelMessage } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { Laminar, aiSdkTelemetry } from "@lmnr-ai/lmnr";
 
@@ -22,7 +22,6 @@ export const runAgent = async (
 ): Promise<ModelMessage[]> => {
     const workingHistory = filterCompatibleMessages(conversationHistory)
     const messages: ModelMessage[] = [
-        { role: "system", content: SYSTEM_PROMPT },
         ...workingHistory,
         { role: "user", content: userMessage },
     ];
@@ -30,6 +29,7 @@ export const runAgent = async (
     while ( true ) {
         const result = streamText({
             model: openai(MODEL_NAME),
+            instructions: SYSTEM_PROMPT,
             messages,
             tools,
             telemetry: {
@@ -39,9 +39,13 @@ export const runAgent = async (
 
         const toolCalls: ToolCallInfo[] = [];
         let currentText = "";
-        let steamError: Error | null = null;
         try {
             for await ( const chunk of result.fullStream ) {
+                if ( chunk.type === "error" ) {
+                    throw chunk.error instanceof Error
+                        ? chunk.error
+                        : new Error(String(chunk.error));
+                }
                 if ( chunk.type === "text-delta" ) {
                     currentText += chunk.text;
                     callbacks.onToken(chunk.text);
@@ -57,20 +61,39 @@ export const runAgent = async (
                 }
             }
         } catch (e) {
-            streamError = e as Error;
-            if (!currentText && !streamError.message.includes("No output generated")) {
-                throw streamError;
-            }
+            throw e instanceof Error ? e : new Error(String(e));
         }
 
         fullResponse += currentText;
-        if (streamError && !currentText) {
-            fullResponse = "We are sorry.";
-            callbacks.onToken(fullResponse);
+
+        const finishReason = await result.finishReason;
+        if (finishReason !== "tool-calls" || toolCalls.length === 0) {
+            const responseMessage = await result.response;
+            messages.push(...responseMessage.messages);
             break;
         }
-        
-        
+        // adding generated tool calls to response
+        const responseMessage = await result.response;
+        messages.push(...responseMessage.messages);
+        // adding the result of tool calls to response
+        // otherwise LLM won't know that it called the tool before
+        for ( const tc of toolCalls ) {
+            const result = await executeTool(tc.toolName, tc.args);
+            callbacks.onToolCallEnd(tc.toolName, result);
+            messages.push({
+                role: "tool",
+                content: [
+                    {
+                        type: "tool-result",
+                        toolCallId: tc.toolCallId,
+                        toolName: tc.toolName,
+                        output: { type: "text", value: "result"},
+                    }
+                ],
+            });
+        }
     }
+    callbacks.onComplete(fullResponse);
     await Laminar.flush();
+    return messages;
 };
