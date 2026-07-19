@@ -10,6 +10,8 @@ import type {
   MultiTurnEvalData,
   MultiTurnResult,
 } from "./types.ts";
+import { buildMockedTools } from "./utils.ts";
+import { ToolCall } from "../dist/ui/index";
 
 const TOOL_DEFINITIONS: any = {
   readFile: {
@@ -81,4 +83,52 @@ export const singleTurnExecutorMocks = async (evalData: EvalData) => {
     toolNames,
     selectedAny,
   } as SingleTurnResult;
+};
+
+export const multiTurnWithMocks = async (data: MultiTurnEvalData) => {
+  // Implementation for multi-turn evaluation with mocks
+  const tool = buildMockedTools(data.mockTools);
+
+  const message: ModelMessages[] = data.messages ?? [
+    { role: "system", content:  SYSTEM_PROMPT },
+    { role: "user", content: data.prompt! }
+  ];
+
+  const result = await generateText({
+    model: openai(data.config?.model ?? "gpt-5.4-mini"),
+    // instructions: data.systemPrompt ?? SYSTEM_PROMPT,
+    messages: message,
+    tools: tool,
+    stopWhen: stepCountIs(data.config?.maxSteps ?? 20),
+  });
+
+  const allToolCalls: string[] = [];
+  const steps = result.steps.map((step) => {
+    const stepToolCalls = (step.toolCalls ?? []).map((tc) => {
+      allToolCalls.push(tc.toolName);
+      return {
+        toolName: tc.toolName,
+        args: "args" in tc ? tc.args : {}
+      };
+    });
+
+    const stepResults = (step.staticToolResults ?? []).map((tr) => ({
+      toolName: tr.toolName,
+      result: "results" in tr ? tr.results : tr,
+    }));
+    
+    return {
+      toolCalls: stepToolCalls.length > 0 ? stepToolCalls : undefined,
+      toolResults: stepToolResults.length > 0 ? stepToolResults : undefined,
+      text: step.text || undefined,
+    };
+  });
+
+  const toolsUsed = [...new Set(allToolCalls)];
+  return {
+    text: result.text,
+    steps,
+    toolUsed,
+    toolCallOrder: allToolCalls,
+  };
 };
