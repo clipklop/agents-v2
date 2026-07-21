@@ -1,4 +1,4 @@
-import { generateText, stepCountIs, tool, type ToolSet } from "ai";
+import { generateText, stepCountIs, tool, type ModelMessage, type ToolSet } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { aiSdkTelemetry } from "@lmnr-ai/lmnr";
 import { z } from "zod";
@@ -11,7 +11,7 @@ import type {
   MultiTurnResult,
 } from "./types.ts";
 import { buildMockedTools } from "./utils.ts";
-import { ToolCall } from "../dist/ui/index";
+// import { ToolCall } from "../dist/ui/index";
 
 const TOOL_DEFINITIONS: any = {
   readFile: {
@@ -89,14 +89,14 @@ export const multiTurnWithMocks = async (data: MultiTurnEvalData) => {
   // Implementation for multi-turn evaluation with mocks
   const tool = buildMockedTools(data.mockTools);
 
-  const message: ModelMessages[] = data.messages ?? [
-    { role: "system", content:  SYSTEM_PROMPT },
+  const message: ModelMessage[] = data.messages ?? [
+    // { role: "system", content:  SYSTEM_PROMPT },
     { role: "user", content: data.prompt! }
   ];
 
   const result = await generateText({
     model: openai(data.config?.model ?? "gpt-5.4-mini"),
-    // instructions: data.systemPrompt ?? SYSTEM_PROMPT,
+    instructions: data.systemPrompt ?? SYSTEM_PROMPT,
     messages: message,
     tools: tool,
     stopWhen: stepCountIs(data.config?.maxSteps ?? 20),
@@ -112,7 +112,7 @@ export const multiTurnWithMocks = async (data: MultiTurnEvalData) => {
       };
     });
 
-    const stepResults = (step.staticToolResults ?? []).map((tr) => ({
+    const stepToolResults = (step.staticToolResults ?? []).map((tr) => ({
       toolName: tr.toolName,
       result: "results" in tr ? tr.results : tr,
     }));
@@ -128,7 +128,7 @@ export const multiTurnWithMocks = async (data: MultiTurnEvalData) => {
   return {
     text: result.text,
     steps,
-    toolUsed,
+    toolsUsed,
     toolCallOrder: allToolCalls,
   };
 };
