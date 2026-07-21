@@ -26,16 +26,13 @@ export const llmJudge = async (output: MultiTurnResult, target: MultiTurnTarget)
       },
     },
     schemaDescription: "Evaluation of an AI agent response",
+    instructions: `You are an expert evaluator for AI agent responses. Please assess the following output based on the target criteria:
+      Scoring criteria: 
+        10: Response fully addresses the query and is highly accurate;
+        7-9: Response is mostly relevant and accurate;
+        4-6: Response is partially relevant and accurate;
+        1-3: Response is completely irrelevant or inaccurate`,
     messages: [
-      {
-        role: "system",
-        content: `You are an expert evaluator for AI agent responses. Please assess the following output based on the target criteria:
-          Scoring criteria: 
-            10: Response fully addresses the query and is highly accurate;
-            7-9: Response is mostly relevant and accurate;
-            4-6: Response is partially relevant and accurate;
-            1-3: Response is completely irrelevant or inaccurate`
-      },
       {
         role: "user",
         content: `Task: ${target.originalTask}
