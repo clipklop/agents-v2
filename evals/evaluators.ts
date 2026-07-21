@@ -19,6 +19,7 @@ export const llmJudge = async (output: MultiTurnResult, target: MultiTurnTarget)
   const result = await generateObject({
     model: openai("gpt-5.4-mini"),
     schema: judgeSchema,
+    schemaName: "EvaluationResult",
     providerOptions: {
       openai: {
         reasoningEffort: "high",
