@@ -1,14 +1,14 @@
 import React, { useState, useCallback } from "react";
 import { Box, Text, useApp } from "ink";
 import type { ModelMessage } from "ai";
-import { runAgent } from "../agent/run.ts";
+import { runAgent } from "../agent/run.js";
 import { MessageList, type Message } from "./components/MessageList.tsx";
 import { ToolCall, type ToolCallProps } from "./components/ToolCall.tsx";
 import { Spinner } from "./components/Spinner.tsx";
 import { Input } from "./components/Input.tsx";
 import { ToolApproval } from "./components/ToolApproval.tsx";
 import { TokenUsage } from "./components/TokenUsage.tsx";
-import type { ToolApprovalRequest, TokenUsageInfo } from "../types.ts";
+import type { ToolApprovalRequest, TokenUsageInfo, AgentCallbacks } from "../types.js";
 
 interface ActiveToolCall extends ToolCallProps {
   id: string;
@@ -42,7 +42,7 @@ export function App() {
       setStreamingText("");
       setActiveToolCalls([]);
 
-      try {
+        try {
         const newHistory = await runAgent(userInput, conversationHistory, {
           onToken: (token) => {
             setStreamingText((prev) => prev + token);
@@ -85,7 +85,7 @@ export function App() {
           onTokenUsage: (usage) => {
             setTokenUsage(usage);
           },
-        });
+        } as AgentCallbacks);
 
         setConversationHistory(newHistory);
       } catch (error) {
