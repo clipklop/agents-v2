@@ -1,0 +1,41 @@
+import { tool } from 'ai';
+import { z } from 'zod';
+import fs from 'node:fs/promises';
+import nodePath from 'node:path';
+
+export const readFile = tool({
+    description: "Reads the content of a file at the given path.",
+    inputSchema: z.object({
+        filePath: z.string().describe("The path to the file you want to read.").min(1, "File path cannot be empty"),
+    }),
+    execute: async ({ filePath }) => {
+        try {
+            const absolutePath = nodePath.resolve(filePath);
+            const content = await fs.readFile(absolutePath, 'utf-8');
+            return content;
+        } catch (error) {
+            throw new Error(`Failed to read file at ${filePath}: ${error.message}`);
+        }
+    },
+});
+
+export const writeFile = tool({
+    description: "Writes content to a file at the given path. Creates the file if it does not exist, and overwrites it if it does.",
+    inputSchema: z.object({
+        filePath: z.string().describe("The path to the file you want to write to.").min(1, "File path cannot be empty"),
+        content: z.string().describe("The content you want to write to the file."),
+    }),
+    execute: async ({ filePath, content }) => {
+        try {
+            const absolutePath = nodePath.resolve(filePath);
+            
+            const dir = nodePath.dirname(absolutePath);
+            await fs.mkdir(dir, { recursive: true });
+            
+            await fs.writeFile(absolutePath, content, 'utf-8');
+            return `Successfully wrote ${content.length} characters to file at ${filePath}`;
+        } catch (error) {
+            throw new Error(`Failed to write to file at ${filePath}: ${error.message}`);
+        }
+    },
+});
