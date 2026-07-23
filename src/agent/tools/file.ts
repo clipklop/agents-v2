@@ -18,3 +18,24 @@ export const readFile = tool({
         }
     },
 });
+
+export const writeFile = tool({
+    description: "Writes content to a file at the given path. Creates the file if it does not exist, and overwrites it if it does.",
+    inputSchema: z.object({
+        filePath: z.string().describe("The path to the file you want to write to.").min(1, "File path cannot be empty"),
+        content: z.string().describe("The content you want to write to the file."),
+    }),
+    execute: async ({ filePath, content }) => {
+        try {
+            const absolutePath = nodePath.resolve(filePath);
+            
+            const dir = nodePath.dirname(absolutePath);
+            await fs.mkdir(dir, { recursive: true });
+            
+            await fs.writeFile(absolutePath, content, 'utf-8');
+            return `Successfully wrote ${content.length} characters to file at ${filePath}`;
+        } catch (error) {
+            throw new Error(`Failed to write to file at ${filePath}: ${error.message}`);
+        }
+    },
+});
