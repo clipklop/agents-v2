@@ -39,3 +39,23 @@ export const writeFile = tool({
         }
     },
 });
+
+export const listFiles = tool({
+    description: "List all the files and directories in a given directory path.",
+    inputSchema: z.object({
+        directoryPath: z.string().describe("The path to the directory you want to list files from.").min(1, "Directory path cannot be empty"),
+    }),
+    execute: async ({ directoryPath }) => {
+        try {
+            const absolutePath = nodePath.resolve(directoryPath);
+            const entries = await fs.readdir(absolutePath, { withFileTypes: true });
+            const items = entries.map(entry => ({
+                const type = entry.isFile() ? 'file' : entry.isDirectory() ? 'directory' : 'other';
+                return `${type}: ${entry.name}`;
+            }));
+            return items.length > 0 ? items.join('\n') : `No files or directories found in ${directoryPath}`;
+        } catch (error) {
+            throw new Error(`Failed to list files in directory at ${directoryPath}: ${error.message}`);
+        }
+    }, 
+});
