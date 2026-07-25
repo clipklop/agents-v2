@@ -14,7 +14,7 @@ export const readFile = tool({
             const content = await fs.readFile(absolutePath, 'utf-8');
             return content;
         } catch (error) {
-            throw new Error(`Failed to read file at ${filePath}: ${error.message}`);
+            throw new Error(`Failed to read file at ${filePath}: ${error}`);
         }
     },
 });
@@ -35,7 +35,7 @@ export const writeFile = tool({
             await fs.writeFile(absolutePath, content, 'utf-8');
             return `Successfully wrote ${content.length} characters to file at ${filePath}`;
         } catch (error) {
-            throw new Error(`Failed to write to file at ${filePath}: ${error.message}`);
+            throw new Error(`Failed to write to file at ${filePath}: ${error}`);
         }
     },
 });
@@ -49,13 +49,29 @@ export const listFiles = tool({
         try {
             const absolutePath = nodePath.resolve(directoryPath);
             const entries = await fs.readdir(absolutePath, { withFileTypes: true });
-            const items = entries.map(entry => ({
+            const items = entries.map(entry => {
                 const type = entry.isFile() ? 'file' : entry.isDirectory() ? 'directory' : 'other';
                 return `${type}: ${entry.name}`;
-            }));
+            });
             return items.length > 0 ? items.join('\n') : `No files or directories found in ${directoryPath}`;
         } catch (error) {
-            throw new Error(`Failed to list files in directory at ${directoryPath}: ${error.message}`);
+            throw new Error(`Failed to list files in directory at ${directoryPath}: ${error}`);
         }
     }, 
+});
+
+export const deleteFile = tool({
+    description: "Deletes a file at the given path. Use with caution as this operation cannot be undone.",
+    inputSchema: z.object({
+        filePath: z.string().describe("The path to the file you want to delete.").min(1, "File path cannot be empty"),
+    }),
+    execute: async ({ filePath }) => {
+        try {
+            const absolutePath = nodePath.resolve(filePath);
+            await fs.unlink(absolutePath);
+            return `Successfully deleted file at ${filePath}`;
+        } catch (error) {
+            throw new Error(`Failed to delete file at ${filePath}: ${error}`);
+        }
+    },
 });

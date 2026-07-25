@@ -1,6 +1,12 @@
-import { dateTime } from "./dateTime.js";
+import { dateTime } from "./dateTime.ts";
+import { readFile, writeFile, deleteFile, listFiles } from "./file.ts"
 // All tools combined for the agent
 
 export const tools = {
-    dateTime, 
+    dateTime,
+    readFile,
+    writeFile,
+    listFiles,
+    deleteFile
 };
+
