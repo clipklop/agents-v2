@@ -37,8 +37,29 @@ function messagesToText(messages: ModelMessage[]): string {
  */
 export async function compactConversation(
   messages: ModelMessage[],
-  model: string = "gpt-5-mini",
+  model: string = "gpt-5.4-mini",
 ): Promise<any> {
   // Filter out system messages - they're handled separately
-  //
+  const conversationMessages = messages.filter((msg) => msg.role !== "system");
+  if (conversationMessages.length === 0) {
+    return [];
+  }
+
+  const conversationText = messagesToText(conversationMessages);
+
+  const summary = await generateText({
+    model: openai(model),
+    prompt: `${SUMMARIZATION_PROMPT}${conversationText}`,
+  });
+
+  const compactedMessages = [
+    {
+      role: "user",
+      content: `[CONVERSATION SUMMARY]\n The following content is a summary of the conversation so far: ${summary}. Please continue the conversation where you left off.`
+    },
+    { role: "assistant",
+      content: "I've summarized the conversation for you and I'm ready to continue." 
+    },
+  ];
+  return compactedMessages;
 }
